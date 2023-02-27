@@ -1,43 +1,46 @@
-from sklearn import datasets, neural_network
+from sklearn import neural_network, metrics
+import pandas as pd
 import numpy as np
 
-date, etichete = datasets.load_iris(return_X_y=True)
-# date, etichete = load_boston(return_X_y = True) returneaza
-# o matrice cu 506 linii si 13 coloane in date si un vector
-# cu 506 valori reale in etichete
-# IMPARTIRE IN TRAIN SI TEST
-date_train = date[110:,:]
-etichete_train = etichete[110:]
 
-date_test = date[:110,:]
-etichete_test = etichete[:110]
+data = pd.read_csv('lymphography.data') # citirea setului de date
+new_data = np.array(data)
+np.random.shuffle(new_data)
 
-nr=[10,50,200]
-learning_rate=[1,0.1,0.0001]
+# impartirea datelor in date de train si test
+data_train = new_data[:110, :18]
+data_test = new_data[110:, :18]
 
-errc=9999
-# CREARE SI ANTRENARE MLP
-for i in range(3):
-    regr = neural_network.MLPRegressor(hidden_layer_sizes=(nr[i],), learning_rate_init=learning_rate[i])
-    regr.fit(date_train,etichete_train)
-    # TESTARE MLP
-    predictii = regr.predict(date_test)
-    err=0
-    # EROARE
+# impartirea etichetelor in train si test
+etichete_train = new_data[:110, 18]
+etichete_test = new_data[110:, 18]
 
+# 1 strat ascuns , learing rate 0.01
 
-    for i in range(len(etichete_test)):
-        err+=(predictii[i]-etichete_test[i])*(predictii[i]-etichete_test[i])
-    err/=len(etichete_test)
+clf = neural_network.MLPClassifier(hidden_layer_sizes=30, learning_rate_init=0.01)
+clf.fit(data_train, etichete_train)
 
-    for i in range(len(etichete_test)):
-        if etichete_test[i] == predictii[i]:
-            acc = acc + 1
-    acc = acc/len(etichete_test)
+predictii = clf.predict(data_test)
 
+acuratete = metrics.accuracy_score(y_true=etichete_test, y_pred=predictii)
+print(f"Acuratetea1={acuratete*100}%")
 
+# 2 straturi ascunse , learning rate = 0.01
 
-    if errc>err:
-        errc=err
-        nrc=nr[i]
-print('MSE='+ str(errc) + '     Nr de neuroni=' + str(nrc))
+clf = neural_network.MLPClassifier(hidden_layer_sizes=(30, 15), learning_rate_init=0.01)
+clf.fit(data_train, etichete_train)
+
+predictii = clf.predict(data_test)
+
+acuratete = metrics.accuracy_score(y_true=etichete_test, y_pred=predictii)
+print(f"Acuratetea2={acuratete*100}%")
+
+# 2 straturi ascunse egale , learning rate = 0.1
+
+clf = neural_network.MLPClassifier(hidden_layer_sizes=(30, 30), learning_rate_init=0.1)
+clf.fit(data_train, etichete_train)
+
+predictii = clf.predict(data_test)
+
+acuratete = metrics.accuracy_score(y_true=etichete_test, y_pred=predictii)
+print(f"Acuratetea3={acuratete*100}%")
